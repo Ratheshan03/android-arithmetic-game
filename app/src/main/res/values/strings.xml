@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">ArithmeticGame</string>
+    <string name="new_game">New Game</string>
+    <string name="about">About</string>
+    <string name="welcome_msg">Welcome To Arithmetic Game</string>
+    <string name="studentName">Student Name: Ratheshan Sathiyamoorthy</string>
+    <string name="confirmation_details">I confirm that I understand what plagiarism is and have read and understood the section on Assessment Offences in the Essential Information for Students. The work that I have submitted is entirely my own. Any work from other authors is duly referenced and acknowledged.</string>
+    <string name="studentId">Student Id: w1809947 || 20200170</string>
+    <string name="greater_btn">GREATER</string>
+    <string name="equal_btn">==</string>
+    <string name="less_btn">LESS</string>
+    <string name="correct_view">CORRECT</string>
+    <string name="wrong_view">WRONG</string>
+</resources>
