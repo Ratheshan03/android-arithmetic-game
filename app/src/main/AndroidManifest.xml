@@ -11,7 +11,8 @@
         android:theme="@style/Theme.ArithmeticGame">
         <activity
             android:name=".GamePage"
-            android:exported="false" />
+            android:exported="false"
+            android:configChanges="keyboardHidden|orientation|screenSize"/>
         <activity
             android:name=".MainActivity"
             android:exported="true">

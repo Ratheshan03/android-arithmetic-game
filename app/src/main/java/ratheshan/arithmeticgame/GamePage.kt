@@ -1,11 +1,11 @@
 package ratheshan.arithmeticgame
 
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_game_page.*
 
@@ -24,12 +24,14 @@ class GamePage : AppCompatActivity() {
         var wrongAnswers: Int = 0
         var totalCounts: Int = 0
         var solvedAnswer = 0
-        var left_temp = 0.0
-        var right_temp = 0.0
-        var counter = 0
-
+        var left_temp = 0
+        var right_temp = 0
+        val initialCountdown: Long = 50000
+        val countDownInterval: Long = 1000
+        var timeLeftOnTimer: Long = 0
+        val additionalTime: Long = 10000
     }
-    lateinit var prefs: SharedPreferences
+
     lateinit var greaterBtn: Button
     lateinit var equalBtn: Button
     lateinit var lessBtn: Button
@@ -39,6 +41,7 @@ class GamePage : AppCompatActivity() {
     lateinit var wrongText: TextView
     lateinit var countTime: TextView
     lateinit var resultView: TextView
+    lateinit var countDownTimer: CountDownTimer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,12 +57,47 @@ class GamePage : AppCompatActivity() {
         countTime = findViewById(R.id.timer_text)
         resultView = findViewById(R.id.result_text)
 
-        val timer = MyCounter(50000,1000)
-        timer.start()
         newRound()
+        startTimer()
     }
 
-    // function to calculate expressions
+    /**
+     * Saving initial states of the data using savedInstances
+     * **/
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+
+        outState.putString("savedString1",left_string)
+        outState.putString("savedString2",  right_string)
+        outState.putLong("savedTime", timeLeftOnTimer)
+        outState.putInt("savedCorrectAnswer", correctAnswers)
+        outState.putInt("savedWrongAnswer", wrongAnswers)
+    }
+
+    /**
+     * Retrieving initial states of the data using restoreInstances
+     * **/
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        val leftString = savedInstanceState.getString("savedString1", "")
+        val rightString = savedInstanceState.getString("savedString2", "")
+        val timeLeft = savedInstanceState.getLong("savedTime", 0)
+        val corrects = savedInstanceState.getInt("savedCorrectAnswer", 0)
+        val wrongs = savedInstanceState.getInt("savedWrongAnswer", 0)
+
+        left_string = leftString
+        right_string = rightString
+        rightOperation.text =  right_string
+        leftOperation.text = left_string
+        countTime.text = (timeLeft/1000).toString()
+        correctAnswers = corrects
+        wrongAnswers = wrongs
+
+    }
+
+
+    /**
+     * function to calculate expressions **/
     fun calculateMath(x: Int, y: Int, operator: String): Int {
         when (operator) {
             "+" -> {
@@ -80,7 +118,10 @@ class GamePage : AppCompatActivity() {
         }
     }
 
-    // New round function
+
+    /**
+     * New round function
+     * **/
     private fun newRound(){
         conditionR = false
         conditionL = false
@@ -94,7 +135,6 @@ class GamePage : AppCompatActivity() {
             updateScore()
         }
 
-
         equalBtn.setOnClickListener{
             ++totalCounts
             correct_text.visibility = View.INVISIBLE
@@ -103,7 +143,6 @@ class GamePage : AppCompatActivity() {
             updateScore()
         }
 
-
         lessBtn.setOnClickListener{
             ++totalCounts
             correct_text.visibility = View.INVISIBLE
@@ -111,981 +150,236 @@ class GamePage : AppCompatActivity() {
             answerCheck = "lesser"
             updateScore()
         }
-
         generateOperations()
         checkAnswers()
     }
 
 
-    // Function that generates left and right random strings
+    /**
+     * Function that generates left and right random strings
+     * **/
     private fun generateOperations(){
         val leftExpressionCount = (1..4).random()
         val rightExpressionCount = (1..4).random()
         val operatorList = mutableListOf<String>()
-        var subExpression: Boolean = false
 
         fun oneTerms(): String {
-            var statement = ""
-            var term_one: Int = (1..20).random()
+            var term_one:   Int = (1..21).random()
+            var statement: String = "$term_one"
             solvedAnswer = term_one
-            statement = "$term_one"
-
             return statement
         }
 
         fun twoTerms(): String {
-            var statement = ""
-            while(subExpression == false){
-                operatorList.add(operators.random())
-                var term_one: Int = (1..20).random()
-                var term_two: Int = (1..20).random()
+            val operator1 = operators.random()
+            val num1: Int = (1..21).random()
+            var num2: Int = (1..21).random()
 
-                solvedAnswer = calculateMath(term_one,term_two, operatorList[0])
-                if (operatorList[0].equals("+")){
-                    if (solvedAnswer < 100){
-                        statement = "$term_one ${operatorList[0]} $term_two"
-                        subExpression = true
-                    }else{
-                        twoTerms()
+            when (operator1) {
+                "+" -> {
+                    while (num1 + num2 >= 100){
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
-                if (operatorList[0].equals("-")){
-                    if (solvedAnswer < 100){
-                        statement = "$term_one ${operatorList[0]} $term_two"
-                        subExpression = true
-                    }else{
-                        twoTerms()
+
+                "-" -> {
+                    while (num2 > num1){
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
-                if (operatorList[0].equals("*")){
-                    if (solvedAnswer < 100){
-                        statement = "$term_one ${operatorList[0]} $term_two"
-                        subExpression = true
-                    }else{
-                        twoTerms()
+
+                "*" -> {
+                    while (num1 * num2 >= 100) {
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
-                if (operatorList[0].equals("/")){
-                    if (term_one.toDouble() % term_two.toDouble() == 0.0 && solvedAnswer < 100){
-                        statement = "$term_one ${operatorList[0]} $term_two"
-                        subExpression = true
-                    }else{
-                        twoTerms()
+
+                "/" -> {
+                    while (num1 % num2 != 0){
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
             }
-            return statement
+            return "($num1 ${operator1} $num2)"
         }
 
         fun threeTerms(): String {
-            var statement = ""
-            while(subExpression == false){
-                operatorList.add(operators.random())
-                operatorList.add(operators.random())
-                var term_one: Int = (1..20).random()
-                var term_two: Int = (1..20).random()
-                var term_three: Int = (1..20).random()
+            val operator1 = operators.random()
+            val operator2 = operators.random()
+            val num1: Int = (1..21).random()
+            var num2: Int = (1..21).random()
+            var num3: Int = (1..21).random()
 
-                solvedAnswer = calculateMath(term_one,term_two, operatorList[0])
-                if (operatorList[0].equals("+")){
-                    if (solvedAnswer < 100){
-                        if(operatorList[1].equals("+")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("-")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("*")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("/")){
-                            if (solvedAnswer.toDouble() % term_three.toDouble() == 0.0 && solvedAnswer / term_three < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                    }else{
-                        threeTerms()
+
+            when (operator1) {
+                "+" -> {
+                    while (num1 + num2 >= 100){
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
-                if (operatorList[0].equals("-")){
-                    if (solvedAnswer < 100){
-                        if(operatorList[1].equals("+")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("-")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("*")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("/")){
-                            if (solvedAnswer.toDouble() % term_three.toDouble() == 0.0 && solvedAnswer / term_three < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                    }else{
-                        threeTerms()
+
+                "-" -> {
+                    while (num2 > num1){
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer= calculateMath(num1, num2, operator1)
                 }
-                if (operatorList[0].equals("*")){
-                    if (solvedAnswer < 100){
-                        if(operatorList[1].equals("+")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("-")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("*")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("/")){
-                            if (solvedAnswer.toDouble() % term_three.toDouble() == 0.0 && solvedAnswer / term_three < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                    }else{
-                        threeTerms()
+
+                "*" -> {
+                    while (num1 * num2 >= 100) {
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
-                if (operatorList[0].equals("/")){
-                    if (term_one.toDouble() % term_two.toDouble() == 0.0){
-                        if(operatorList[1].equals("+")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("-")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("*")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("/")){
-                            if (solvedAnswer.toDouble() % term_three.toDouble() == 0.0 && solvedAnswer / term_three < 100){
-                                statement = "($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three"
-                                subExpression = true
-                            }else{
-                                threeTerms()
-                            }
-                        }
-                    }else{
-                        threeTerms()
+
+                "/" -> {
+                    while (num1 % num2 != 0){
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
             }
-            return statement
+            when (operator2){
+
+                "+" -> {
+                    while (solvedAnswer  + num3 >= 100){
+                        num3 = (1..solvedAnswer ).random()
+                    }
+                    solvedAnswer  = calculateMath(solvedAnswer, num3, operator1)
+                }
+
+                "-" -> {
+                    while (num3 > solvedAnswer ){
+                        num3 = (1..solvedAnswer ).random()
+                    }
+                    solvedAnswer = calculateMath(solvedAnswer, num3, operator1)
+                }
+
+                "*" -> {
+                    while (solvedAnswer  * num3 >= 100) {
+                        num3 = (1..num1).random()
+                    }
+                    solvedAnswer = calculateMath(solvedAnswer, num3, operator1)
+                }
+
+                "/" -> {
+                    while (solvedAnswer  % num3 != 0){
+                        num3 = (1..solvedAnswer ).random()
+                    }
+                    solvedAnswer  = calculateMath(solvedAnswer, num3, operator1)
+                }
+            }
+            return "($num1 ${operator1} $num2) ${operator2} $num3"
         }
 
         fun fourTerms(): String {
-            //solvedAnswer = calculateMath(solvedAnswer,term_three, operatorList[1])
-            //solvedAnswer = calculateMath(solvedAnswer,term_four, operatorList[2])
+            val operator1 = operators.random()
+            val operator2 = operators.random()
+            val operator3 = operators.random()
+            val num1: Int = (1..21).random()
+            var num2: Int = (1..21).random()
+            var num3: Int = (1..21).random()
+            var num4: Int = (1..21).random()
 
-            var statement: String = ""
-            while(subExpression == false){
-                operatorList.add(operators.random())
-                operatorList.add(operators.random())
-                operatorList.add(operators.random())
-                var term_one: Int = (1..20).random()
-                var term_two: Int = (1..20).random()
-                var term_three: Int = (1..20).random()
-                var term_four: Int = (1..20).random()
 
-                solvedAnswer = calculateMath(term_one,term_two, operatorList[0])
-                if (operatorList[0].equals("+")){
-                    if (solvedAnswer < 100){
-                        if(operatorList[1].equals("+")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("-")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("*")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("/")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                    }else{
-                        fourTerms()
+
+            when (operator1) {
+                "+" -> {
+                    while (num1 + num2 >= 100){
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
-                if (operatorList[0].equals("-")){
-                    if (solvedAnswer < 100){
-                        if(operatorList[1].equals("+")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("-")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("*")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("/")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                    }else{
-                        fourTerms()
+
+                "-" -> {
+                    while (num2 > num1){
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
-                if (operatorList[0].equals("*")){
-                    if (solvedAnswer < 100){
-                        if(operatorList[1].equals("+")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("-")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("*")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("/")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                    }else{
-                        fourTerms()
+
+                "*" -> {
+                    while (num1 * num2 >= 100) {
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
-                if (operatorList[0].equals("/")){
-                    if (term_one.toDouble() % term_two.toDouble() == 0.0){
-                        if(operatorList[1].equals("+")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("-")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("*")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                        if(operatorList[1].equals("/")){
-                            solvedAnswer = calculateMath(solvedAnswer,term_three,operatorList[1])
-                            if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer < 100){
-                                if(operatorList[2].equals("+")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("-")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("*")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                                if(operatorList[2].equals("/")){
-                                    solvedAnswer = calculateMath(solvedAnswer,term_four,operatorList[2])
-                                    if (solvedAnswer.toDouble() % term_four.toDouble() == 0.0 && solvedAnswer / term_four < 100){
-                                        statement = "(($term_one ${operatorList[0]} $term_two) ${operatorList[1]} $term_three) ${operatorList[2]} $term_four"
-                                        subExpression = true
-                                    }else{
-                                        fourTerms()
-                                    }
-                                }
-                            }else{
-                                fourTerms()
-                            }
-                        }
-                    }else{
-                        fourTerms()
+
+                "/" -> {
+                    while (num1 % num2 != 0){
+                        num2 = (1..num1).random()
                     }
+                    solvedAnswer = calculateMath(num1, num2, operator1)
                 }
             }
-            return statement
-        }
+            when (operator2){
 
+                "+" -> {
+                    while ( solvedAnswer + num3 >= 100){
+                        num3 = (1.. solvedAnswer).random()
+                    }
+                    solvedAnswer = calculateMath(solvedAnswer, num3, operator2)
+                }
+
+                "-" -> {
+                    while (num3 >  solvedAnswer){
+                        num3 = (1.. solvedAnswer).random()
+                    }
+                    solvedAnswer = calculateMath(solvedAnswer, num3, operator2)
+                }
+
+                "*" -> {
+                    while ( solvedAnswer * num3 >= 100) {
+                        num3 = (1..solvedAnswer).random()
+                    }
+                    solvedAnswer = calculateMath(solvedAnswer, num3, operator2)
+                }
+
+                "/" -> {
+                    while (solvedAnswer % num3 != 0){
+                        num3 = (1..solvedAnswer).random()
+                    }
+                    solvedAnswer = calculateMath(solvedAnswer, num3, operator2)
+                }
+            }
+
+            when (operator3){
+
+                "+" -> {
+                    while (solvedAnswer + num4>= 100){
+                        num4 = (1..solvedAnswer).random()
+                    }
+                    solvedAnswer = calculateMath(solvedAnswer, num4, operator3)
+                }
+
+                "-" -> {
+                    while (num4 > solvedAnswer){
+                        num4 = (1..solvedAnswer).random()
+                    }
+                    solvedAnswer = calculateMath(solvedAnswer, num4, operator3)
+                }
+
+                "*" -> {
+                    while (solvedAnswer * num4 >= 100) {
+                        num4 = (1..solvedAnswer).random()
+                    }
+                    solvedAnswer = calculateMath(solvedAnswer, num4, operator3)
+                }
+
+                "/" -> {
+                    while (solvedAnswer % num4 != 0){
+                        num4 = (1..solvedAnswer).random()
+                    }
+                    solvedAnswer= calculateMath(solvedAnswer, num4, operator3)
+                }
+            }
+            return "(($num1 ${operator1} $num2) ${operator2} $num3) ${operator3} ${num4}"
+        }
 
         while (conditionL == false){
             if (leftExpressionCount == 1){
@@ -1098,9 +392,8 @@ class GamePage : AppCompatActivity() {
                 left_string = fourTerms()
             }
 
-            left_temp = solvedAnswer.toDouble()
-
-            if (left_temp != null){
+            left_temp = solvedAnswer
+            if (left_temp <=  100 ){
                 conditionL = true
             }
         }
@@ -1116,10 +409,9 @@ class GamePage : AppCompatActivity() {
                 right_string = fourTerms()
             }
 
-            right_temp = solvedAnswer.toDouble()
-
-            if (left_temp != null){
-                conditionL = true
+            right_temp = solvedAnswer
+            if (right_temp <= 100 ){
+                conditionR = true
             }
         }
 
@@ -1137,7 +429,9 @@ class GamePage : AppCompatActivity() {
 
     }
 
-    // Checks the correct answer for the generated expressions
+    /**
+     * Checks the correct answer for the generated expressions
+     * **/
     private fun checkAnswers(){
         var leftValue  = left_temp
         var rightValue = right_temp
@@ -1155,10 +449,19 @@ class GamePage : AppCompatActivity() {
         }
     }
 
-    // Updates the score and displays the results
+    /**
+     * Updates the score and displays the results **/
     private fun updateScore(){
+        val text = "Extra 10s Added"
+        val duration = Toast.LENGTH_SHORT
+        val toast = Toast.makeText(applicationContext, text, duration)
+
         if (answerCheck == answer){
             correctAnswers++
+            if (correctAnswers % 5 == 0){
+                addMoreTime()
+                toast.show()
+            }
             correctText.visibility = View.VISIBLE
 
         }else if (answerCheck !== answer){
@@ -1166,29 +469,73 @@ class GamePage : AppCompatActivity() {
             wrongText.visibility   = View.VISIBLE
         }
 
-//        Handler().postDelayed({
-//            newRound()
-//        }, 2000)
         newRound()
 
-        // Testing purpose only
+        // For Testing purpose only
         println("---------------------------------------------")
         println("Corrects Answers : $correctAnswers | Wrongs Answers : $wrongAnswers")
         println("---------------------------------------------")
     }
 
+    /**
+     * Ends the game with disabling the buttons and displays user results
+     * **/
+    private fun endRound(){
+        resultView.text = ("CORRECT ANSWERS: "+ correctAnswers.toString() +"\nWRONG ANSWERS: "+ wrongAnswers.toString())
+        greaterBtn.setEnabled(false)
+        lessBtn.setEnabled(false)
+        equalBtn.setEnabled(false)
+    }
 
-    //Countdown Timer Class
-    inner class MyCounter(millisInFuture:Long,countdownInterval:Long):
-        CountDownTimer(millisInFuture,countdownInterval){
-        override fun onFinish() {
-            resultView.text = ("CORRECT ANSWERS: "+ correctAnswers.toString() +"\nWRONG ANSWERS: "+ wrongAnswers.toString())
-            greaterBtn.setEnabled(false)
-            lessBtn.setEnabled(false)
-            equalBtn.setEnabled(false)
-        }
-        override fun onTick(millisUntilFinished: Long) {
-            countTime.text = (millisUntilFinished/1000).toString()
-        }
+    /**
+     * countdown timer function
+     * **/
+    private fun startTimer(){
+        countDownTimer = object: CountDownTimer(initialCountdown, countDownInterval){
+            override fun onTick(millisUntilFinished: Long) {
+                timeLeftOnTimer = millisUntilFinished
+                val timeLeft = millisUntilFinished/1000
+                countTime.text = timeLeft.toString() + "s"
+            }
+            override fun onFinish() {
+                endRound()
+            }
+        }.start()
+    }
+
+
+    private fun restoreRound(){
+        countDownTimer.cancel()
+        val restoredTime = timeLeftOnTimer / 1000
+        countTime.text = restoredTime.toString() + "s"
+        countDownTimer = object: CountDownTimer(timeLeftOnTimer, countDownInterval){
+            override fun onTick(millisUntilFinished: Long) {
+                timeLeftOnTimer = millisUntilFinished
+                val timeLeft = millisUntilFinished/1000
+                countTime.text = timeLeft.toString() + "s"
+            }
+            override fun onFinish() {
+                endRound()
+            }
+        }.start()
+    }
+
+    /**
+     * Adding more time to the round for every 5 correct answers
+     * **/
+    private fun addMoreTime(){
+        countDownTimer.cancel()
+        timeLeftOnTimer += additionalTime
+        countTime.text = timeLeftOnTimer.toString() + "s"
+        countDownTimer = object: CountDownTimer(timeLeftOnTimer, countDownInterval){
+            override fun onTick(millisUntilFinished: Long) {
+                timeLeftOnTimer = millisUntilFinished
+                val timeLeft = millisUntilFinished/1000
+                countTime.text = timeLeft.toString() + "s"
+            }
+            override fun onFinish() {
+                endRound()
+            }
+        }.start()
     }
 }
