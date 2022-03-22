@@ -12,10 +12,12 @@
         <activity
             android:name=".GamePage"
             android:exported="false"
-            android:configChanges="keyboardHidden|orientation|screenSize"/>
+            android:configChanges="orientation|screenSize"
+            />
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

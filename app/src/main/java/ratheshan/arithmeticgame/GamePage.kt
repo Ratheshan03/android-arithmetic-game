@@ -28,7 +28,7 @@ class GamePage : AppCompatActivity() {
         var right_temp = 0
         val initialCountdown: Long = 50000
         val countDownInterval: Long = 1000
-        var timeLeftOnTimer: Long = 0
+        var timeLeftOnTimer: Long = 50000
         val additionalTime: Long = 10000
     }
 
@@ -89,10 +89,9 @@ class GamePage : AppCompatActivity() {
         right_string = rightString
         rightOperation.text =  right_string
         leftOperation.text = left_string
-        countTime.text = (timeLeft/1000).toString()
+        timeLeftOnTimer = timeLeft
         correctAnswers = corrects
         wrongAnswers = wrongs
-
     }
 
 
@@ -163,6 +162,7 @@ class GamePage : AppCompatActivity() {
         val rightExpressionCount = (1..4).random()
         val operatorList = mutableListOf<String>()
 
+        // Function for single string expressions
         fun oneTerms(): String {
             var term_one:   Int = (1..21).random()
             var statement: String = "$term_one"
@@ -170,6 +170,7 @@ class GamePage : AppCompatActivity() {
             return statement
         }
 
+        // Function for two terms expressions
         fun twoTerms(): String {
             val operator1 = operators.random()
             val num1: Int = (1..21).random()
@@ -207,6 +208,7 @@ class GamePage : AppCompatActivity() {
             return "($num1 ${operator1} $num2)"
         }
 
+        // Function for three terms expressions
         fun threeTerms(): String {
             val operator1 = operators.random()
             val operator2 = operators.random()
@@ -277,6 +279,7 @@ class GamePage : AppCompatActivity() {
             return "($num1 ${operator1} $num2) ${operator2} $num3"
         }
 
+        // Function for four terms expressions
         fun fourTerms(): String {
             val operator1 = operators.random()
             val operator2 = operators.random()
@@ -285,8 +288,6 @@ class GamePage : AppCompatActivity() {
             var num2: Int = (1..21).random()
             var num3: Int = (1..21).random()
             var num4: Int = (1..21).random()
-
-
 
             when (operator1) {
                 "+" -> {
@@ -426,7 +427,6 @@ class GamePage : AppCompatActivity() {
         println("Right Expression   | $right_string")
         println("Right Answer       : $right_temp")
         println("---------------------------------------------")
-
     }
 
     /**

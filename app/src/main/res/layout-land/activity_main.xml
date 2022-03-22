@@ -9,51 +9,49 @@
 
     <TextView
         android:id="@+id/welcomeTxtView"
-        android:layout_width="263dp"
-        android:layout_height="33dp"
-        android:layout_marginTop="39dp"
-        android:layout_marginBottom="13dp"
+        android:layout_width="267dp"
+        android:layout_height="27dp"
+        android:layout_marginTop="16dp"
         android:text="@string/welcome_msg"
         android:textColor="@color/teal_700"
         android:textSize="19sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/imageView2"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.102" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/newGameBtn"
-        android:layout_width="177dp"
-        android:layout_height="52dp"
-        android:layout_marginTop="184dp"
+        android:layout_width="173dp"
+        android:layout_height="48dp"
         android:text="@string/new_game"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.144"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/aboutBtn"
+        app:layout_constraintHorizontal_bias="0.501"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/welcomeTxtView" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.594" />
 
     <Button
         android:id="@+id/aboutBtn"
-        android:layout_width="181dp"
+        android:layout_width="173dp"
         android:layout_height="48dp"
-        android:layout_marginTop="188dp"
+        android:layout_marginEnd="124dp"
         android:text="@string/about"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.849"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/welcomeTxtView" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.594" />
 
     <ImageView
-        android:id="@+id/imageView2"
-        android:layout_width="171dp"
-        android:layout_height="0dp"
-        android:layout_marginBottom="158dp"
+        android:id="@+id/imageView"
+        android:layout_width="236dp"
+        android:layout_height="141dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/welcomeTxtView"
+        app:layout_constraintVertical_bias="0.05"
         app:srcCompat="@drawable/image" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

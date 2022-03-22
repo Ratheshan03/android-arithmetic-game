@@ -4,58 +4,24 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/blue3_primary"
+    android:background="@color/teal_200"
     >
 
-
         <TextView
-            android:id="@+id/studentName"
-            android:layout_width="320dp"
-            android:layout_height="32dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="52dp"
-            android:layout_marginEnd="20dp"
-            android:text="@string/studentName"
+            android:id="@+id/textViewPopup"
+            android:layout_width="465dp"
+            android:layout_height="294dp"
+            android:text="@string/about_text"
             android:textAlignment="center"
-            android:textAllCaps="false"
-            android:textColor="@color/black"
-            android:textSize="15sp"
+            android:textColor="#195190"
+            android:textSize="19sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintHorizontal_bias="0.476"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/studentId"
-            android:layout_width="253dp"
-            android:layout_height="32dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="84dp"
-            android:layout_marginEnd="20dp"
-            android:text="@string/studentId"
-            android:textAlignment="center"
-            android:textAllCaps="false"
-            android:textColor="@color/black"
-            android:textSize="14sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/details"
-            android:layout_width="372dp"
-            android:layout_height="136dp"
-            android:layout_marginStart="20dp"
-            android:layout_marginTop="156dp"
-            android:layout_marginEnd="20dp"
-            android:text="@string/confirmation_details"
-            android:textAlignment="center"
-            android:textAllCaps="false"
-            android:textColor="@color/black"
-            android:textSize="13sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.498"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.444"
+            tools:ignore="TextContrastCheck" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
