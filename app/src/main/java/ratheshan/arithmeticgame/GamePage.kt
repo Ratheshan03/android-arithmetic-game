@@ -31,7 +31,7 @@ class GamePage : AppCompatActivity() {
         var timeLeftOnTimer: Long = 50000
         val additionalTime: Long = 10000
     }
-
+    // variable declaration
     lateinit var greaterBtn: Button
     lateinit var equalBtn: Button
     lateinit var lessBtn: Button
@@ -47,6 +47,7 @@ class GamePage : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_game_page)
 
+        // variable initialization
         greaterBtn = findViewById(R.id.greater_btn)
         equalBtn = findViewById(R.id.equal_btn)
         lessBtn = findViewById(R.id.less_btn)
@@ -352,7 +353,7 @@ class GamePage : AppCompatActivity() {
             when (operator3){
 
                 "+" -> {
-                    while (solvedAnswer + num4>= 100){
+                    while (solvedAnswer + num4 >= 100){
                         num4 = (1..solvedAnswer).random()
                     }
                     solvedAnswer = calculateMath(solvedAnswer, num4, operator3)
@@ -485,6 +486,8 @@ class GamePage : AppCompatActivity() {
         greaterBtn.setEnabled(false)
         lessBtn.setEnabled(false)
         equalBtn.setEnabled(false)
+        correctAnswers = 0
+        wrongAnswers = 0
     }
 
     /**
