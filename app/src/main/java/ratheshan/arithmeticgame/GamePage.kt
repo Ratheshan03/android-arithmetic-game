@@ -157,7 +157,7 @@ class GamePage : AppCompatActivity() {
 
     /**
      * Function that generates left and right random strings
-     * **/
+      **/
     private fun generateOperations(){
         val leftExpressionCount = (1..4).random()
         val rightExpressionCount = (1..4).random()
