@@ -73,6 +73,7 @@ class GamePage : AppCompatActivity() {
         outState.putLong("savedTime", timeLeftOnTimer)
         outState.putInt("savedCorrectAnswer", correctAnswers)
         outState.putInt("savedWrongAnswer", wrongAnswers)
+
     }
 
     /**
@@ -161,7 +162,6 @@ class GamePage : AppCompatActivity() {
     private fun generateOperations(){
         val leftExpressionCount = (1..4).random()
         val rightExpressionCount = (1..4).random()
-        val operatorList = mutableListOf<String>()
 
         // Function for single string expressions
         fun oneTerms(): String {
@@ -506,7 +506,7 @@ class GamePage : AppCompatActivity() {
         }.start()
     }
 
-
+    // For Testing Purpose
     private fun restoreRound(){
         countDownTimer.cancel()
         val restoredTime = timeLeftOnTimer / 1000

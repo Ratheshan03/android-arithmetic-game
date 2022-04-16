@@ -11,14 +11,15 @@
         android:id="@+id/welcomeTxtView"
         android:layout_width="267dp"
         android:layout_height="27dp"
-        android:layout_marginTop="16dp"
         android:text="@string/welcome_msg"
         android:textColor="@color/teal_700"
         android:textSize="19sp"
         android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.07" />
 
     <Button
         android:id="@+id/newGameBtn"
@@ -26,33 +27,35 @@
         android:layout_height="48dp"
         android:text="@string/new_game"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/aboutBtn"
-        app:layout_constraintHorizontal_bias="0.501"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.168"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.594" />
+        app:layout_constraintVertical_bias="0.699" />
 
     <Button
         android:id="@+id/aboutBtn"
         android:layout_width="173dp"
         android:layout_height="48dp"
-        android:layout_marginEnd="124dp"
         android:text="@string/about"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.815"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.594" />
+        app:layout_constraintVertical_bias="0.699" />
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="236dp"
-        android:layout_height="141dp"
+        android:layout_width="302dp"
+        android:layout_height="173dp"
+        android:contentDescription="@string/home_image"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/welcomeTxtView"
-        app:layout_constraintVertical_bias="0.05"
-        app:srcCompat="@drawable/image"
-        android:contentDescription="@string/home_image" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.277"
+        app:srcCompat="@drawable/image" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
